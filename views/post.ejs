@@ -1,0 +1,10 @@
+<%-include("./partials/header") -%>
+
+<h1><%=title%></h1>
+
+<p><%=content%></p>
+<a href="/blogs/posts/edit/<%=id%>" class="btn btn-info">Edit</a>
+<a href="#" data-index='<%=id %>' class="btn btn-danger del">Delete</a>
+
+
+<%-include("./partials/footer") -%>
