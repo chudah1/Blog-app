@@ -1,6 +1,4 @@
-
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 const blogController = require("../controller/blogController.js");
 
 router.get("/", blogController.get_blogs )

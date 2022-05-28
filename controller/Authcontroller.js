@@ -1,8 +1,10 @@
 const {User}= require("../models/Model.js");
 
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-register =(req, res)=>{
+const register = async(req, res)=>{
+	try{
 	const {username, email, password, password2} = req.body;
 	const errors= []
 	if(!username ||!email || !password){
@@ -21,32 +23,33 @@ register =(req, res)=>{
 		res.render("register", {errors, username, email,password, password2})
 	}
 
-	else{
-		User.findOne({email:email}, (err, user)=>{
-			if (user){
-				errors.push({msg:"Email already exists"})
+	
+	 const existingUser = User.findOne({email:email});
+	 if (existingUser){
+		errors.push({msg:"Email already exists"})
 				     //res.render("register", {errors, username,email, password,password2});
-			
+			}
+	 const encryptedPassword = await bcrypt.hash(password, 10);
 
-				}else{
-					 const newUser = new User({
+			const newUser = await User.create({
 						username:username,
 						email:email, 
-						password:password});
-					console.log(newUser.password);
-					bcrypt.hash(newUser.password, 10, (err, hash)=>{
-						console.log(hash);
-						if (err){ console.log(err)};
-						newUser.password=hash;
-						newUser.save().then(user=>{
-							console.log(user.password)
-							res.redirect("/users/login")})
-						.catch(err=>console.log(err))
-					})
-			}
-		})
+						password:encryptedPassword
+					});
+			const token = jwt.sign(
+				{userid: newUser._id, email},
+				"chudahisthegreatestofalltime",
+				{expiresIn:"2h"}
+			);
+			newUser.token = token;
+			res.status(201).json(newUser);
+				
+		}catch(err){
+			console.log(err)
+		}
 
 	}
-}
+
+
 
 module.exports={register}
