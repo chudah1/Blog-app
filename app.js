@@ -1,5 +1,6 @@
 
 const express = require("express");
+require("dotenv").config();
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const _ =require("lodash");

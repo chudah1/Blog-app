@@ -32,13 +32,13 @@ const register = async(req, res)=>{
 	 const encryptedPassword = await bcrypt.hash(password, 10);
 
 			const newUser = await User.create({
-						username:username,
+					    username:username,
 						email:email, 
 						password:encryptedPassword
 					});
 			const token = jwt.sign(
 				{userid: newUser._id, email},
-				"chudahisthegreatestofalltime",
+				process.env.TOKEN_SECRET,
 				{expiresIn:"2h"}
 			);
 			newUser.token = token;
@@ -50,6 +50,24 @@ const register = async(req, res)=>{
 
 	}
 
+const login = async (req, res)=>{
+	try{
+		const {email, password} = req.body;
+		const user = await User.findOne({email:email});
+		if (user && await(bcrypt.compare(password, user.password))){
+			const token = jwt.sign(
+				{userid: user._id, email},
+				process.env.TOKEN_SECRET,
+				{expiresIn:"2h"}
+			);
+			user.token = token;
+			res.status(200).json(user);
+		}res.status(400).send("Invalid details")
+	}catch(err){
+          console.log(error);
+	}
+}
 
 
-module.exports={register}
+
+module.exports={register, login}
