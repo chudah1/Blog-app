@@ -8,10 +8,12 @@ const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pelle
 const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
 
 const app = express();
-const bcrypt = require("bcryptjs");
+const flash = require("connect-flash")
+const session = require("express-session")
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
+app.use(express.json())
 
 
 
@@ -28,12 +30,30 @@ app.get("/compose", (req, res)=>{
   res.render("compose")
 })
 
+
+//express-session
+app.use(session({
+  secret: 'keyboardcat',
+  resave: true,
+  saveUninitialized: true,
+}))
+//flash
+app.use(flash())
+
+//global varibales for flash messages
+app.use((req, res, next)=>{
+  res.locals.success_msg = req.flash("success_msg")
+  res.locals.err_msg = req.flash("err_msg")
+  res.locals.error = req.flash('error');
+  next()
+})
+
 //blog routes
 app.use("/blogs", require("./routes/blogroutes.js"));
 
 //auth routes
 app.use("/users", require("./routes/Authroute.js"))
 //set up the server
-app.listen(3000, (req,res)=> {
+app.listen(3000, ()=> {
   console.log('Server started on port 3000');
 });

@@ -1,4 +1,6 @@
-const blogModel= require("../models/Model.js").blogModel;
+const { CommentModel } = require("../models/Model.js");
+
+const {blogModel}= require("../models/Model.js");
 
 
 const get_blogs = (req,res)=>{
@@ -11,9 +13,7 @@ const get_blogs = (req,res)=>{
     if (!err){
       res.render("post", {id:blog._id,title: blog.title, content:blog.content})
 
-}else{
-  console.log(err);
-}
+}else console.log(err);
   })
   }
 const new_blog = (req, res)=>{
@@ -61,8 +61,28 @@ const delete_blog = (req,res)=>{
   .catch(err=>console.log(err))
 }
 
+const makeComment =(req, res)=>{
+  blogModel.findById(req.params.id, (err,blog)=>{
+    if (err){
+      console.log(err.message)
+      console.log("Post does not exist")
+    }
+      const comment = CommentModel.create({
+        content:req.body.comment,
+        //author:req.body.name,  
+      })
+      comment.save()
+      .then(res=>{console.log(res)})
+      .catch(err=>{console.log(err)})
+      res.redirect("/blogs")
 
 
+  })
+}
+
+//const deleteComment = async(req, res)=>{
+  //CommentModel.findById(req.params.id,  (err, comment)=>{})
+//}
 
 
 
@@ -72,7 +92,9 @@ const delete_blog = (req,res)=>{
  	new_blog,
  	edit_form,
  	update_blog,
- 	delete_blog
+ 	delete_blog, 
+   makeComment,
+
 
 
 

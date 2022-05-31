@@ -9,7 +9,7 @@ mongoose.connect("mongodb://localhost:27017/blogsdb", {useNewUrlParser:true})
 const userSchema= new Schema({
 	username:{
 		type:String,
-		required:[true, "Please enter an email"], 
+		required:[true, "Please enter a username"], 
 		unique: true
 	},
 
@@ -18,9 +18,6 @@ const userSchema= new Schema({
 		type:String,
 		required:true,
 		validate:[isEmail, "Please provide a valid email"]
-	},
-	token:{
-		type:String
 	},
 	password:{
 		type:String,

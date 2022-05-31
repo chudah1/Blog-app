@@ -7,6 +7,8 @@
       <div class="card">
         <div class="card-body">
 
+
+         <%- include("./partials/messages") %>
           <!-- Makes POST request to /login route -->
           <form action="/users/login" method="POST">
             <div class="form-group">
@@ -22,7 +24,11 @@
 
         </div>
       </div>
+      <p class="lead mt-4">
+        No Account? <a href="/users/register">Register</a>
+      </p>
     </div>
+
 
     <!-- <div class="col-sm-4">
       <div class="card">
