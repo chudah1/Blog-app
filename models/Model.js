@@ -74,8 +74,6 @@ const likeSchema = new Schema({
 const likeModel = mongoose.model("Like", likeSchema);
 
 
-
-
 const blogSchema = new Schema({
   title:{
     type:String,
@@ -85,9 +83,7 @@ const blogSchema = new Schema({
     type:String,
     required:true
   },
- 
-
 })
 const blogModel = new mongoose.model("Blog", blogSchema); 
 
-module.exports = {blogModel, User, likeModel, CommentModel};
+module.exports = {blogModel, User, CommentModel, likeModel};

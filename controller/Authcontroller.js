@@ -9,6 +9,10 @@ const register = async (req, res)=>{
     // array obect for holding objects containing a message amd value
 	let errors= []
 	//check required field 
+   const existUsername = await User.findOne({username});
+   if (existUsername) {
+	   errors.push({msg:"Username taken already"})
+   }
 	
 	if(!username ||!email || !password){
 		errors.push({msg:"Please fill all fields"})
@@ -22,49 +26,71 @@ const register = async (req, res)=>{
 	}
     //meaning there are problems, render along the errors with the input fields user passed
 	if (errors.length > 0){
-		res.render("register", {errors, username, email,password, password2})
+		return res.render("register", {errors, username, email,password, password2})
 	}
+    
+	
+	 User.findOne({email:email})
+	 .then(existingUser=>{
+		 //user exists
+		if (existingUser){
+			errors.push({msg:"Email already exists"})
+			return res.render("register", {errors, username,email, password,password2});
+		}
 
-	else{
-		User.findOne({email:email})
-		.then(existingUser=> {
-			   //user exists
-			  if (existingUser){
-				  errors.push({msg:"Email already exists"})
-				  res.render("register", {errors, username,email, password,password2});
-			  }
-			  
-				//hash password
-				const encryptedPassword = bcrypt.hash(password, 10);
-				const newUser = new User({
-					username:username,
-					email:email, 
-					password:encryptedPassword
-				});
-				newUser.save()
-				.then(user=>{
-					req.flash("success_msg", "Registered successfully")
-					res.redirect("users/login")
-				})
-				.catch(err=> console.log(err.message))
-				// use json web token to create a token for the newly created user
-				jwt.sign( 
-					{newUser},
-					process.env.TOKEN_SECRET,
-					{expiresIn:"2h"},
-				(err, token)=>{
-					res.status(201).json(user);
-				}
-				);
-			
-		}).catch(err=> console.log(err));
-
-	}
-
+		
+		const newUser = new User({
+			username,
+			email, 
+			password
+		});
+	
+			//hash password
+	    bcrypt.hash(newUser.password, 10, (err, encryptedPassword)=>{
+			if (err) throw err
+			newUser.password=encryptedPassword
+			newUser.save()
+			.then(user=>{
+				return res.json(user)
+			})
+			.catch(err=> console.log(err.message))
+		});
+	
+		// use json web token to create a token for the newly created user
+		jwt.sign( 
+			{newUser},
+			process.env.TOKEN_SECRET,
+			{expiresIn:"2h"}
+		);
+		req.flash("success_msg", "Registered successfully" )
+		return res.redirect("/users/login")
+		
+	
+	})
 	}catch(err){
 		console.log(err.message)
 	}
 }
+
+const login = async (req, res)=>{
+	    const errors=[]
+	 	const {email, password} = req.body;
+		const user = await User.findOne({email})
+
+		if (user && await bcrypt.compare(password, user. password)){
+				jwt.sign(
+					{user},
+					process.env.TOKEN_SECRET,
+					{expiresIn:"2h"}
+				)
+				req.flash("success_mg", "You have successfully logged in")
+				return res.redirect("/blogs/")
+			}
+			errors.push({msg:"Incorrect email or password"})
+		    return res.render("login",{errors, email} )
+		}
+
+
 const logout = (req, res)=>{
 	//using jwt there is no direct way to logout 
 	//replace the jwt with an empty string and set the expiry date to 1 millisecond
@@ -73,36 +99,28 @@ const logout = (req, res)=>{
 	res.redirect("/users/login")
 }
 
-const login = async (req, res)=>{
-		const {email, password} = req.body;
-		const user = await User.findOne({email:email});
-		if (user && await(bcrypt.compare(password, user.password))){
-		jwt.sign(
-				{user},
-				process.env.TOKEN_SECRET,
-				{expiresIn:"2h"},
-				(err, token)=>{
-					res.status(200).json(token);
-				}
-			);
-		}
-		res.status(401).send("Invalid details")
-}
+
 const loginRequired = (req, res, next) => {
 	try {
-	const token =req.headers["authorization"].split(" ")[1]; 
+	const token =req.headers.authorization.split(" ")[1]
+	console.log(token)
 	if (!token) {
-	  return res.status(403).send("A token is required for authentication");
+		return res.sendStatus(403)
 	}
 
-	jwt.verify(token,process.env.TOKEN_KEY, (err, decoded)=>{
-		if(err) res.redirect("users/login")
-		else {console.log(decoded)}
+	jwt.verify(token,process.env.TOKEN_SECRET, (err, decoded)=>{
+		if(err) {
+			req.flash("err_msg", "Please login")
+			return res.sendStatus(403)
+		}
+		else {
+		console.log(decoded)
 		next()
+		}
 
 	});
 	} catch (err) {
-	  return res.status(401).send("Invalid Token");
+		console.log(err.message)
 	}
 	return next;
 }
@@ -119,8 +137,8 @@ const checkUser = (req, res, next)=>{
 			}
 			//user exists make the user property, decoded contains the payload which contains the user
 			else{
-				newUser = User.findById(decoded.user._id)
-				res.locals.user=newUser
+				user = User.findById(decoded.user._id)
+				res.locals.user=user
 				next();
 			}
 		})
@@ -131,5 +149,6 @@ const checkUser = (req, res, next)=>{
 		next();
 	}
 }
+
 
 module.exports={register, login, logout, loginRequired, checkUser}

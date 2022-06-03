@@ -1,7 +1,4 @@
-const { CommentModel } = require("../models/Model.js");
-
-const {blogModel}= require("../models/Model.js");
-
+const { blogModel, User, CommentModel, likeModel} = require("../models/Model.js");
 
 const get_blogs = (req,res)=>{
   blogModel.find({})
@@ -9,13 +6,13 @@ const get_blogs = (req,res)=>{
   .catch(err=>console.log(err))};
 
  const find_blog = (req, res)=>{
-  blogModel.findById(req.params.id, (err, blog)=>{
-    if (!err){
-      res.render("post", {id:blog._id,title: blog.title, content:blog.content})
-
-}else console.log(err);
-  })
+  blogModel.findById(req.params.id).populate("comments")
+  .then(blog=>{
+       res.render("post", {id:blog._id,title: blog.title, content:blog.content, comments:blog.comments})
+  }).catch(err=>res.json(err))
   }
+
+
 const new_blog = (req, res)=>{
   const blog = new blogModel({
     title:req.body.title,
@@ -28,14 +25,11 @@ const new_blog = (req, res)=>{
 }
 
 const edit_form = (req, res)=>{
-   blogModel.findById(req.params.id, (err, blog)=>{
-    if (!err){
+   blogModel.findById(req.params.id)
+    .then(blog=>{
       res.render("edit", {id:blog._id, title: blog.title, content:blog.content})
-
-}else{
-  res.redirect("/blogs");
-}
- })
+    })
+  .catch(err=>res.redirect("/blogs"));
 
 }
 
@@ -46,9 +40,9 @@ const update_blog = (req, res)=>{
   }, (err)=>{
     if (!err){
       res.redirect("/blogs")
-    }else{
-      console.log(err);
     }
+  res.status(401).json({"message":"Could not update blog"})
+    
   })
 }
 
@@ -62,27 +56,33 @@ const delete_blog = (req,res)=>{
 }
 
 const makeComment =(req, res)=>{
-  blogModel.findById(req.params.id, (err,blog)=>{
-    if (err){
-      console.log(err.message)
-      console.log("Post does not exist")
-    }
-      const comment = CommentModel.create({
-        content:req.body.comment,
-        //author:req.body.name,  
-      })
-      comment.save()
-      .then(res=>{console.log(res)})
-      .catch(err=>{console.log(err)})
-      res.redirect("/blogs")
-
-
+  CommentModel.create(req.body)
+  .then((comment)=>{
+    if (comment){
+      blogModel.findByIdAndUpdate(req.params.id, 
+        {$set:{comments:comment._id}},
+      {new:true}
+  ).then((blog)=>{
+    if(blog) res.json(blog)
+  }).catch(res.json({"error":"Could not update blog"}))
+}
   })
+  .catch(err=>res.json({"err":"Could not create comment"}) )
+    
 }
 
-//const deleteComment = async(req, res)=>{
-  //CommentModel.findById(req.params.id,  (err, comment)=>{})
-//}
+const deleteComment = (req, res)=>{
+ CommentModel.findById(req.params.id)
+ .then(comment=>{
+   if (user._id!=comment.author && user._id!= comment.post.author){
+     req.flash("err_message", "You cannot delete this comment")
+   }
+   comment.remove()
+   .then(comment=>{
+     res.status.json({"message":"comment deleted successfully", "redirect":"/blogs/posts/comment.post._id"})
+   }).catch(console.log(err))
+ })
+}
 
 
 
@@ -93,9 +93,5 @@ const makeComment =(req, res)=>{
  	edit_form,
  	update_blog,
  	delete_blog, 
-   makeComment,
-
-
-
-
- }
+   makeComment
+  }
