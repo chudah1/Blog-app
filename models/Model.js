@@ -58,10 +58,6 @@ const commentSchema = new Schema({
 const CommentModel = mongoose.model("Comment", commentSchema);
 	
 const likeSchema = new Schema({
-	content:{
-		type: String,
-		required:true
-	},
 	author:{
 		type:Schema.ObjectId,
 		ref:"User"
