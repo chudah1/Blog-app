@@ -57,11 +57,12 @@ const register = async (req, res)=>{
 		});
 	
 		// use json web token to create a token for the newly created user
-		jwt.sign( 
+		let token = jwt.sign( 
 			{newUser},
 			process.env.TOKEN_SECRET,
 			{expiresIn:"2h"}
 		);
+		res.cookie('jwt', token, {httpOnly:true})
 		req.flash("success_msg", "Registered successfully" )
 		return res.redirect("/users/login")
 		
@@ -78,11 +79,13 @@ const login = async (req, res)=>{
 		const user = await User.findOne({email})
 
 		if (user && await bcrypt.compare(password, user. password)){
-				jwt.sign(
+				let token = jwt.sign(
 					{user},
 					process.env.TOKEN_SECRET,
 					{expiresIn:"2h"}
 				)
+				res.cookie('jwt', token, {httpOnly:true})
+
 				req.flash("success_mg", "You have successfully logged in")
 				return res.redirect("/blogs/")
 			}
@@ -100,38 +103,31 @@ const logout = (req, res)=>{
 }
 
 
-const loginRequired = (req, res, next) => {
-	try {
-	const token =req.headers.authorization.split(" ")[1]
-	console.log(token)
-	if (!token) {
-		return res.sendStatus(403)
-	}
-
-	jwt.verify(token,process.env.TOKEN_SECRET, (err, decoded)=>{
-		if(err) {
-			req.flash("err_msg", "Please login")
-			return res.sendStatus(403)
-		}
-		else {
-		console.log(decoded)
-		next()
-		}
-
-	});
-	} catch (err) {
-		console.log(err.message)
-	}
-	return next;
+const loginRequired = async (req, res, next) => {
+		try {
+			let token =req.cookies.jwt
+			if (token){
+			const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
+			if (decoded){
+    		req.user = await (User.findById(decoded.user._id));
+			 return next();
+			}
+			res.redirect('/users/login')
+		}else return res.status(403).json({"error":"A token is required for authentication"})
+		
+		}catch (err) {
+			res.json({err:err.message})
+		  }
 }
 
 
 const checkUser = (req, res, next)=>{
-	const token = req.headers['authorization'].split(" ")[1]
-	if (token){
-		jwt.verify(token, process.env.TOKEN_SECRET, (err,decoded)=>{
+	let token;
+		try{
+			let token =req.cookies.jwt
+		     jwt.verify(token, process.env.TOKEN_SECRET, (err,decoded)=>{
 			//invalid token, call the next handler
-			if(err) {
+			 if(err) {
 				res.locals.user =null;
 				next();
 			}
@@ -142,13 +138,18 @@ const checkUser = (req, res, next)=>{
 				next();
 			}
 		})
-	}
-	//no token
-	else{
-		res.locals.user=null
-		next();
-	}
+		
+		}catch(err){
+			console.error(err)
+
+		}
+		//no token
+		if(!token){
+			res.locals.user=null
+			next();
+		}
 }
+
 
 
 module.exports={register, login, logout, loginRequired, checkUser}

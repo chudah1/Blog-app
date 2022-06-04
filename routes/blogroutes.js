@@ -26,5 +26,6 @@ router.delete("/posts/delete/:id", blogController.delete_blog)
 // make comment
 
 router.post("/posts/makecomment/:id", blogController.makeComment)
+router.delete("/posts/deletecomment/:id")
 
 module.exports=router;

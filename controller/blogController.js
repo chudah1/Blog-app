@@ -12,6 +12,20 @@ const get_blogs = (req,res)=>{
   }).catch(err=>res.json(err))
   }
 
+  /** 
+const get_blogs_user = async (req, res)=>{
+  try{
+  const user = await User.findOne({username:req.params.username})
+  if (user){
+    res.render()
+  }
+
+  } catch(err){
+    return res.json({"error":"Could not find user"})
+  }
+}
+*/
+
 
 const new_blog = (req, res)=>{
   const blog = new blogModel({
@@ -29,7 +43,7 @@ const edit_form = (req, res)=>{
     .then(blog=>{
       res.render("edit", {id:blog._id, title: blog.title, content:blog.content})
     })
-  .catch(err=>res.redirect("/blogs"));
+  .catch(err=>console.log(err.message));
 
 }
 
