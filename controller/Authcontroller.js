@@ -122,32 +122,30 @@ const loginRequired = async (req, res, next) => {
 
 
 const checkUser = (req, res, next)=>{
-	let token;
 		try{
 			let token =req.cookies.jwt
-		     jwt.verify(token, process.env.TOKEN_SECRET, (err,decoded)=>{
-			//invalid token, call the next handler
-			 if(err) {
-				res.locals.user =null;
-				next();
-			}
-			//user exists make the user property, decoded contains the payload which contains the user
-			else{
-				user = User.findById(decoded.user._id)
+			if (token){
+		     const decoded =jwt.verify(token, process.env.TOKEN_SECRET)
+
+			 if (decoded){
+				//user exists make the user property, decoded contains the payload which contains the user
+				const user = User.findById(decoded.user._id)
 				res.locals.user=user
 				next();
+			 }
+			//invalid token, call the next handler
+			 res.locals.user =null;
+				next();
 			}
-		})
-		
+			//no token
+			else{
+				res.locals.user=null
+				next();
+			}
 		}catch(err){
-			console.error(err)
-
+			res.json({err:err.message})
 		}
-		//no token
-		if(!token){
-			res.locals.user=null
-			next();
-		}
+	
 }
 
 
