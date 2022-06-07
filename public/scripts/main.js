@@ -1,14 +1,14 @@
-window.onload = () => {
-  var deletebtn = document.querySelector(".del");
-  deletebtn.addEventListener("click", executedelete);
 
+var deletebtn = document.querySelector(".del");
+window.onload = () => {
+  deletebtn.addEventListener("click", executedelete);
 };
 
 
 //
 const executedelete = () => {
   let id = deletebtn.dataset.index;
-  fetch(`/blogs/posts/delete/${id}`, {
+  fetch(`/blogs/delete/${id}`, {
     method: "DELETE",
   })
     .then((res) => res.json())

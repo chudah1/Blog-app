@@ -58,11 +58,11 @@ const register = async (req, res)=>{
 	
 		// use json web token to create a token for the newly created user
 		let token = jwt.sign( 
-			{newUser},
+			{newUserid:newUser._id},
 			process.env.TOKEN_SECRET,
 			{expiresIn:"2h"}
 		);
-		res.cookie('jwt', token, {httpOnly:true})
+		res.cookie('jwt', token, {httpOnly:true, maxAge:3*3600*1000})
 		req.flash("success_msg", "Registered successfully" )
 		return res.redirect("/users/login")
 		
@@ -80,11 +80,11 @@ const login = async (req, res)=>{
 
 		if (user && await bcrypt.compare(password, user. password)){
 				let token = jwt.sign(
-					{user},
+					{newUserid:user._id},
 					process.env.TOKEN_SECRET,
 					{expiresIn:"2h"}
 				)
-				res.cookie('jwt', token, {httpOnly:true})
+				res.cookie('jwt', token, {httpOnly:true, maxAge:3*3600*1000})
 
 				req.flash("success_mg", "You have successfully logged in")
 				return res.redirect("/blogs/")
@@ -109,32 +109,30 @@ const loginRequired = async (req, res, next) => {
 			if (token){
 			const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
 			if (decoded){
-    		req.user = await (User.findById(decoded.user._id));
+    		req.user = await (User.findById(decoded.newUserid));
 			 return next();
-			}
-			res.redirect('/users/login')
+			} else return res.redirect('/users/login')
 		}else return res.status(403).json({"error":"A token is required for authentication"})
 		
 		}catch (err) {
-			res.json({err:err.message})
+			return res.json({err:err.message})
 		  }
 }
 
 
-const checkUser = (req, res, next)=>{
+const checkUser = async(req, res, next)=>{
 		try{
 			let token =req.cookies.jwt
 			if (token){
 		     const decoded =jwt.verify(token, process.env.TOKEN_SECRET)
-
 			 if (decoded){
 				//user exists make the user property, decoded contains the payload which contains the user
-				const user = User.findById(decoded.user._id)
+				user = await (User.findById(decoded.newUserid))
 				res.locals.user=user
-				next();
+				return next();
 			 }
 			//invalid token, call the next handler
-			 res.locals.user =null;
+			res.locals.user =null;
 				next();
 			}
 			//no token
@@ -147,6 +145,9 @@ const checkUser = (req, res, next)=>{
 		}
 	
 }
+
+
+
 
 
 

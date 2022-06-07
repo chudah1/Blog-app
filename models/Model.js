@@ -26,15 +26,15 @@ const userSchema= new Schema({
 
 	},
 	posts:[{
-		type: Schema.ObjectId,
+		type: Schema.Types.ObjectId,
 		ref:"Blog"
 	}],
 	comments:[{
-		type: Schema.ObjectId,
+		type: Schema.Types.ObjectId,
 		ref:"Comment"
 	}],
 	likes:[{
-		type: Schema.ObjectId,
+		type: Schema.Types.ObjectId,
 		ref:"Like"
 	}]
 
@@ -47,30 +47,34 @@ const commentSchema = new Schema({
 		required:true
 	},
 	author:{
-		type:Schema.ObjectId,
+		type:Schema.Types.ObjectId,
 		ref:"User"
 	},
 	post :{
-		type:Schema.ObjectId,
+		type:Schema.Types.ObjectId,
 		ref:"Blog"
 	}
 })
-const CommentModel = mongoose.model("Comment", commentSchema);
+const Comment = mongoose.model("Comment", commentSchema);
 	
 const likeSchema = new Schema({
 	author:{
-		type:Schema.ObjectId,
+		type:Schema.Types.ObjectId,
 		ref:"User"
 	},
 	post :{
-		type:Schema.ObjectId,
+		type:Schema.Types.ObjectId,
 		ref:"Blog"
 	}
 })
-const likeModel = mongoose.model("Like", likeSchema);
+const Like = mongoose.model("Like", likeSchema);
 
 
 const blogSchema = new Schema({
+  author:{
+		type:Schema.Types.ObjectId,
+		ref:"User"
+	},
   title:{
     type:String,
     required:true
@@ -79,7 +83,16 @@ const blogSchema = new Schema({
     type:String,
     required:true
   },
-})
-const blogModel = new mongoose.model("Blog", blogSchema); 
+  comments:[{
+	type: Schema.Types.ObjectId,
+	ref:"Comment"
+}],
+likes:[{
+	type: Schema.Types.ObjectId,
+	ref:"Like"
+}]
 
-module.exports = {blogModel, User, CommentModel, likeModel};
+})
+const Blog = new mongoose.model("Blog", blogSchema); 
+
+module.exports = {Blog, User, Comment, Like};

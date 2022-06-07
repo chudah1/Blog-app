@@ -5,10 +5,11 @@
 <p> <%=blog.content.substring(0, 100)%> <a href="/blogs/posts/<%= blog._id%>"> Read More</a></p>
 
 <p>Make a comment</p>
+<!--
 <form
         class="input-group mb-3"
         method="POST"
-        action="posts/makecomment/<%=id %>"
+        action="posts/makecomment/<%=blog._id %>"
       >
         <input
           type="text"
@@ -23,6 +24,6 @@
 	
 
 <%})%>
-
+  -->
 <%-include("./partials/footer") -%>
 
