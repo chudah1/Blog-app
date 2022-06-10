@@ -3,8 +3,8 @@ const jwt = require("jsonwebtoken");
 
 
 const get_blogs = (req,res)=>{
- Blog.find({})
-  .then(blogs=>{res.render("home", {blogs})})
+ Blog.find({}).populate("comments")
+  .then(blogs=>{res.render("blogs", {blogs})})
   .catch(err=>console.log(err))
 };
 
@@ -112,7 +112,7 @@ const makeComment =async (req, res)=>{
   user.comments.push(comment)
   user.save()
   .then(res=>console.log(res))
-  .catch(err=>console.error(err))
+  .catch(err=>console.error(err.message))
   //update blog with comment
     if (comment){
       const blog =Blog.findByIdAndUpdate(req.params.id, {comments:comment._id},{new:true})
@@ -150,7 +150,7 @@ const makeLike =async(req, res)=>{
  else{
     like = await Like.find({post: blog._id, author:user._id})
    if (like){
-     Like.findByIdAndDelete(like.delete)
+     Like.findByIdAndDelete(like._id)
    }
    else {
      newLike = await Like.create({author:user._id, post:blog._id})

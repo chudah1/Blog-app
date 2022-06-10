@@ -88,7 +88,7 @@ const login = async (req, res)=>{
 
 				req.flash("success_mg", "You have successfully logged in")
 				return res.redirect("/blogs/")
-			}
+			}``
 			errors.push({msg:"Incorrect email or password"})
 		    return res.render("login",{errors, email} )
 		}

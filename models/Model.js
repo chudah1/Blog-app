@@ -38,7 +38,7 @@ const userSchema= new Schema({
 		ref:"Like"
 	}]
 
-})
+},{timestamps:true})
 const User = mongoose.model("User", userSchema);
 
 const commentSchema = new Schema({
@@ -54,7 +54,7 @@ const commentSchema = new Schema({
 		type:Schema.Types.ObjectId,
 		ref:"Blog"
 	}
-})
+},{timestamps:true})
 const Comment = mongoose.model("Comment", commentSchema);
 	
 const likeSchema = new Schema({
@@ -66,7 +66,7 @@ const likeSchema = new Schema({
 		type:Schema.Types.ObjectId,
 		ref:"Blog"
 	}
-})
+},{timestamps:true})
 const Like = mongoose.model("Like", likeSchema);
 
 
@@ -92,7 +92,7 @@ likes:[{
 	ref:"Like"
 }]
 
-})
+}, {timestamps:true})
 const Blog = new mongoose.model("Blog", blogSchema); 
 
 module.exports = {Blog, User, Comment, Like};

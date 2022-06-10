@@ -11,7 +11,8 @@ const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rho
 
 const app = express();
 const flash = require("connect-flash")
-const session = require("express-session")
+const session = require("express-session");
+const { checkUser } = require("./controller/Authcontroller.js");
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
@@ -19,12 +20,17 @@ app.use(express.json())
 app.use(cookieParser())
 
 
-
+app.get("*", checkUser)
 // render the individual pages
 app.get("/about",(req,res)=>{
   res.render("about", {aboutContent});
 })
 
+/*
+app.get("/", (req, res)=>{
+  res.render()
+})
+*/
 app.get("/contact",(req,res)=>{
   res.render("contact", {contactContent});
 })
