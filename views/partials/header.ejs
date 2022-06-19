@@ -20,6 +20,7 @@
               <a class="nav-item nav-link" href="/">Home</a>
               <% if (user) {%>
               <a class="nav-item nav-link" href="/users/logout">Logout</a>
+              <li>Hi, <%=user.username %> </li>
               <%} else {%>
               <a class="nav-item nav-link" href="/users/login">Login</a>
               <a class="nav-item nav-link" href="/users/register">Sign Up</a>

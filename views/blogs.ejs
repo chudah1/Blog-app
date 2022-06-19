@@ -1,6 +1,7 @@
 <%-include("./partials/header") -%>
 
 <div id="posts">
+  
   <% blogs.forEach(blog=>{ %>
     <div class="card border-dark">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -9,10 +10,10 @@
           <span id="likes-count-<%= blog._id %>">
           <%=blog.likes.length %></span>         
           <i class="fas fa-thumbs-up"
-            id="like-button-{{post.id}}"
             data-like="<%=blog._id%>"
           ></i>
-        <% if (user._id == blog.author){ %>
+        <% if (user){ %>
+        <% if (user._id.equals(blog.author)){ %>
           <div class="btn-group">
             <button
               type="button"
@@ -28,6 +29,7 @@
             </ul>
           </div>
           <%}%>
+          <%}%>
         </div>
       </div>
       <div class="card-body">
@@ -39,12 +41,12 @@
               <% blog.comments.forEach(comment=> { %>
               <div class="d-flex justify-content-between align-items-center">
                 <div>
-                  <a href="/posts/<%=comment.user.username %>"><%= comment.author %></a
-                  >: <%= comment.content.text %>
+                  <a href="/posts/<%=comment.username %>"><%= comment.username %></a
+                  >: <%= comment.content %>
                 </div>
                 <div>
                   <small class="text-muted"> <%= comment.createdAt %></small>
-                  <% if (user._id == comment.author._id || user._id == post.author._id) { %>
+                  <% if (user._id.equals(comment.author) || user._id.equals(blog.author)) { %>
                   <div class="btn-group">
                     <button
                       type="button"
@@ -55,7 +57,7 @@
                       <li>
                         <a
                           href="/blogs/deletecomment/<%=comment._id%>"
-                          class="dropdown-item"
+                          class="dropdown-item del" data-delcomment="<%=comment._id %>"
                           >Delete</a
                         >
                       </li>
@@ -85,7 +87,7 @@
           <input
             type="text"
             id="text"
-            name="text"
+            name="comment"
             class="form-control"
             placeholder="Comment something!"
           />
@@ -97,7 +99,7 @@
     <br/ > 
   <% }) %>
 </div>
-<div align="center">
+<div class ="align center">
   <a href="/blogs/compose"><button type="button" class="btn btn-primary btn-lg">
       Create a Post
     </button></a >

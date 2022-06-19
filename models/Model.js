@@ -25,18 +25,17 @@ const userSchema= new Schema({
 		minlength:6
 
 	},
-	posts:[{
+	blogs:[
+		{
 		type: Schema.Types.ObjectId,
 		ref:"Blog"
-	}],
-	comments:[{
-		type: Schema.Types.ObjectId,
-		ref:"Comment"
-	}],
-	likes:[{
-		type: Schema.Types.ObjectId,
-		ref:"Like"
-	}]
+	}
+],
+verified:{
+	type:Boolean,
+	default:false,
+	required:true
+}
 
 },{timestamps:true})
 const User = mongoose.model("User", userSchema);
@@ -50,7 +49,11 @@ const commentSchema = new Schema({
 		type:Schema.Types.ObjectId,
 		ref:"User"
 	},
-	post :{
+	username:{
+		type:String
+
+	},
+	blog :{
 		type:Schema.Types.ObjectId,
 		ref:"Blog"
 	}
@@ -58,14 +61,11 @@ const commentSchema = new Schema({
 const Comment = mongoose.model("Comment", commentSchema);
 	
 const likeSchema = new Schema({
-	author:{
+	_id:{
 		type:Schema.Types.ObjectId,
 		ref:"User"
-	},
-	post :{
-		type:Schema.Types.ObjectId,
-		ref:"Blog"
 	}
+	
 },{timestamps:true})
 const Like = mongoose.model("Like", likeSchema);
 
@@ -83,15 +83,19 @@ const blogSchema = new Schema({
     type:String,
     required:true
   },
-  comments:[{
+  comments:[
+	{
 	type: Schema.Types.ObjectId,
 	ref:"Comment"
-}],
+}
+],
 likes:[{
 	type: Schema.Types.ObjectId,
-	ref:"Like"
-}]
-
+	ref:"User"
+}],
+imageName:{
+	type:String
+}
 }, {timestamps:true})
 const Blog = new mongoose.model("Blog", blogSchema); 
 

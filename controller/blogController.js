@@ -1,5 +1,5 @@
 const {Blog, User, Comment, Like} = require("../models/Model.js");
-const jwt = require("jsonwebtoken");
+const { request } = require("express");
 
 
 const get_blogs = (req,res)=>{
@@ -12,7 +12,7 @@ const get_blogs = (req,res)=>{
    try{
  const blog= await Blog.findById(req.params.id)
       if(blog){
-       return res.render("post", {id:blog._id,title: blog.title, content:blog.content, comments:blog.comments})
+       return res.render("blog", {id:blog._id,title: blog.title, content:blog.content, comments:blog.comments})
       }
       else{
         return res.redirect("/blogs/")
@@ -37,23 +37,28 @@ const get_blogs_user = async (req, res)=>{
 }
 */
 
+
+ 
+
 const blog_form= (req, res)=>{
   res.render("compose")
 }
-const new_blog = (req, res)=>{
+
+
+const new_blog = async (req, res)=>{
   try{
+  const user= req.user
   const blog = new Blog({
     title:req.body.title,
     content:req.body.content, 
-    author:req.user._id
+    author:user._id,
+    imageName:request.file.filename
   })
-  blog.save()
-  .then(res=>console.log(res))
-  .catch(err=>console.log(err))
-  req.user.posts.push(blog)
-  req.user.save()
-  .then(res=>console.log(res))
-  .catch(err=>console.error(err))
+  await blog.save()
+  if (Array.isArray(user.blogs)){
+  user.blogs.push(blog)
+  }
+  await user.save()
   res.redirect("/blogs/")
 }catch(err){
   console.error(err)
@@ -69,99 +74,101 @@ const edit_form = (req, res)=>{
 
 }
 
-const update_blog = (req, res)=>{
- Blog.findByIdAndUpdate(req.params.id, {
-   title:req.body.title,
-   content:req.body.content
-  }, (err)=>{
-    if (!err){
-      return res.redirect("/blogs")
-    }
-  return res.status(401).json({"message":"Could not update blog"})
-    
-  })
-}
+const update_blog = async (req, res)=>{
+  let user = req.user
+  let blogId = req.params.id
+ let blog = await Blog.findbyId(blogId)
+ if (blog){
+  if (user._id.equals(blog.author)){
+    await blog.updateOne({
+      title:req.body.title,
+      content:req.body.content
+    },
+    {new:true}
+    ) 
+    return res.redirect("/blogs")
+  }
+  else{
+    return res.status(409).send("You are not authorized to update this post")
+  }
+ }
+  return res.status(401).send("Post does not exist") 
+  }
 
 const delete_blog = async (req,res)=>{
   try{ 
     let user = req.user
-    const blog = await Blog.findById(req.params.id)
-    console.log(blog.author)
+    const blog = await Blog.findById(req.params.id).select("_id author")
   if (blog){
-      if (user._id===blog.author){
-       Blog.findByIdAndDelete(blog._id)
+      if (user._id.equals(blog.author)){
+       await blog.remove()
        return res.json({"redirect":"/blogs/"})
     }
-    else{
     req.flash("error", "You cannot delete")
     return res.json({"error":"Unauthorized user"})
-    }
-    
+
   }else return res.sendStatus(409)
 }catch(err){
-  console.log(err)
+  console.error(err)
 }
 }
 
 const makeComment =async (req, res)=>{
   let user= req.user
-  //create a new comment
-  const comment = await Comment.create({author:user._id, post:req.params._id, content:req.body})
-  comment.save()
-  //update the user comments with new comment
-  user.comments.push(comment)
-  user.save()
-  .then(res=>console.log(res))
-  .catch(err=>console.error(err.message))
-  //update blog with comment
-    if (comment){
-      const blog =Blog.findByIdAndUpdate(req.params.id, {comments:comment._id},{new:true})
-      if(blog) return res.json(blog)
-      else return res.json({"error":"Could not update blog"})
-}
-  else return res.json({"err":"Could not create comment"})
-    
-}
-
-
-const deleteComment = (req, res)=>{
-  let user = req.user
- Comment.findById(req.params.id)
- .then(comment=>{
-   if (user._id!=comment.author && user._id!= comment.post.author){
-     req.flash("err_message", "You cannot delete this comment")
-     res.redirect("/blogs/")
-   }
-   else{
-   comment.remove()
-   .then(comment=>{
-     res.json({"message":"comment deleted successfully", "redirect":"/blogs/posts/comment.post"})
-   }).catch(console.log(err))
+  const blogId = req.params.id;
+  const blog = await Blog.findById(blogId);
+  
+  if (blog){
+    const comment = new Comment({author:user._id, blog:blogId, content:req.body.comment, username:user.username})
+    await comment.save()
+  //update the blog comments with new comment
+    blog.comments.push(comment)
+  //update blog with comment to save to database
+      Blog.findByIdAndUpdate(blogId, {$push: {comments:{_id:comment._id}}},{new:true}).exec()
+       return res.status(200).send("Comment added successfully")
   }
- })
+   return res.status(409).send("Could not create comment succesfully")
 }
 
-const makeLike =async(req, res)=>{
+
+const deleteComment = async (req, res)=>{
+  let blog;
+  let user = req.user
+  let comment = await Comment.findById(req.params.id)
+    if (comment){
+      blog = await Blog.findById(comment.blog).select("_id author")
+      if (user._id.equals(comment.author) || user._id.equals(blog.author)){
+       await comment.remove()
+       return res.status(201).json({"message":"comment deleted successfully", "redirect":"/blogs/posts/" + blog._id})
+    } 
+    req.flash("err_message", "You cannot delete this comment")
+    return res.status(409).send("Unauthorized to delete this comment")
+   }
+   else return res.status(409).send("Comment does not exist")
+ 
+}
+
+const makeLike=async (req, res)=>{
+  let user = req.user
  const blog = await Blog.findById(req.params.id)
- let like;
  if (!blog){
    res.status(400).json({"err":"Could not find blog"})
  }
  else{
-    like = await Like.find({post: blog._id, author:user._id})
-   if (like){
-     Like.findByIdAndDelete(like._id)
-   }
-   else {
-     newLike = await Like.create({author:user._id, post:blog._id})
-     if (newLike){
-       newLike.save()
-       newBlog = awaitBlog.findByIdAndUpdate(req.params.id, {likes:newLike._id}, {new:true})
-       if (new_blog) return res.json({new_blog})
-     }
-   }
-   return res.json({"likes":blog.likes.length, "liked": user._id in blog.likes.map(like=>like.author)})
- }
+   let liked = blog.likes.map(like=>{
+    return (like._id.equals(user._id))
+  })
+  if (liked){
+    await blog.updateOne({$pull:{likes:user._id}}, {new:true}).exec()
+    return res.json({"likes":blog.likes.length, "liked": liked })
+
+  } else {
+    await blog.updateOne({$push:{likes:{_id:user._id}}}, {new:true}).exec()
+    return res.json({"likes":blog.likes.length, "liked": liked })
+  }
+}
+  
+ 
 }
 
 
@@ -174,5 +181,6 @@ const makeLike =async(req, res)=>{
  	update_blog,
  	delete_blog, 
    makeComment,
+   deleteComment,
    makeLike
   }

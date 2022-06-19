@@ -19,18 +19,14 @@ app.use(express.static("public"));
 app.use(express.json())
 app.use(cookieParser())
 
-
+//apply checkUser middleware to all routess
 app.get("*", checkUser)
 // render the individual pages
 app.get("/about",(req,res)=>{
   res.render("about", {aboutContent});
 })
 
-/*
-app.get("/", (req, res)=>{
-  res.render()
-})
-*/
+
 app.get("/contact",(req,res)=>{
   res.render("contact", {contactContent});
 })
