@@ -28,7 +28,7 @@ const executelike=async ()=>{
     method:"POST"
   })
   let result =await data.json()
-  if (result["liked"]){
+  if (result["liked"]==true){
     likebutton.classList.add("fas fa thumbs-up")
   }
   else likebutton.classList.add("far fa thumbs-up")

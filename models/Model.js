@@ -7,6 +7,11 @@ mongoose.connect("mongodb://localhost:27017/blogsdb", {useNewUrlParser:true})
 
 
 const userSchema= new Schema({
+	isAdmin:{
+		type:Boolean,
+		required:true,
+		default:false
+	},
 	username:{
 		type:String,
 		required:[true, "Please enter a username"], 
@@ -29,7 +34,8 @@ const userSchema= new Schema({
 		{
 		type: Schema.Types.ObjectId,
 		ref:"Blog"
-	}
+	},
+
 ],
 verified:{
 	type:Boolean,
