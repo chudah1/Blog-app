@@ -149,26 +149,25 @@ const deleteComment = async (req, res)=>{
 }
 
 const makeLike=async (req, res)=>{
+  let liked;
   let user = req.user
  const blog = await Blog.findById(req.params.id)
  if (!blog){
-   res.status(400).json({"err":"Could not find blog"})
+   return res.status(400).json({"err":"Could not find blog"})
  }
- else{
-   let liked = blog.likes.map(like=>{
+   if (blog.likes.length>0){
+   liked = blog.likes.find(like=>{
     return (like._id.equals(user._id))
   })
-  if (liked){
-    await blog.updateOne({$pull:{likes:user._id}}, {new:true}).exec()
-    return res.json({"likes":blog.likes.length, "liked": liked })
+  if (liked) await blog.updateOne({$pull:{likes:{_id:user._id}}}, {new:true}).exec()
+  } 
 
-  } else {
+  else {
     await blog.updateOne({$push:{likes:{_id:user._id}}}, {new:true}).exec()
-    return res.json({"likes":blog.likes.length, "liked": liked })
   }
-}
-  
- 
+
+return res.json({"likes":blog.likes.length, "liked":!liked? false:true  })
+
 }
 
 

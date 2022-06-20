@@ -89,10 +89,16 @@ const blogSchema = new Schema({
 	ref:"Comment"
 }
 ],
-likes:[{
-	type: Schema.Types.ObjectId,
-	ref:"User"
-}],
+  likes:{
+	type:[{
+		_id:{
+			type: Schema.Types.ObjectId,
+	        ref:"User"
+		}
+	}],
+	default:[]
+  },
+
 imageName:{
 	type:String
 }
