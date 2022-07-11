@@ -12,11 +12,11 @@ Users of posts can delete comments they find hurtful and creators of comments al
 
 ## Tech Stack
 
-  Server side: NodeJs, ExpressJs, MongoDb
+  **Server side** : NodeJs, ExpressJs, MongoDb
   
-  Client side: HTML, CSS, JavaScript
+  **Client side** : HTML, CSS, JavaScript
   
-  Dependencies: JWT, Validator, Body-parser, nodemon, ejs, flash, mongoose
+  **Dependencies** : JWT, Validator, Body-parser, nodemon, ejs, flash, mongoose
 
 
 ## Project Layout
