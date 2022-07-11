@@ -10,7 +10,7 @@ On the app, authenticated users can like posts, create, view, edit and delete po
 Users of posts can delete comments they find hurtful and creators of comments also have the option to delete in realtime
 
 
-##Tech Stack
+## Tech Stack
 
   Server side: NodeJs, ExpressJs, MongoDb
   
@@ -19,7 +19,7 @@ Users of posts can delete comments they find hurtful and creators of comments al
   Dependencies: JWT, Validator, Body-parser, nodemon, ejs, flash, mongoose
 
 
-##Project Layout
+## Project Layout
 
     Routes
     
